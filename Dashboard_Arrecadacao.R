@@ -34,7 +34,38 @@ df_completo <- df_renainf %>%
   )
 
 lista_anos <- sort(unique(df_completo$Ano), decreasing = TRUE)
-lista_ufs <- sort(unique(df_completo$UF))
+
+# Foi criado um dicionário para linkar o orgão autuador com a UF correspondente, permitindo o filtro correto no dashboard.
+codigos_uf_orgao <- c(
+  AC = 101100,
+  AL = 102100,
+  AM = 103100,
+  AP = 104100,
+  BA = 105100,
+  CE = 106100,
+  DF = 107100,
+  ES = 108100,
+  GO = 109100,
+  MA = 110100,
+  MT = 111100,
+  MS = 112100,
+  MG = 113100,
+  PA = 114100,
+  PB = 115100,
+  PR = 116100,
+  PE = 117100,
+  PI = 118100,
+  RJ = 119100,
+  RN = 120100,
+  RS = 121100,
+  RO = 122100,
+  RR = 123100,
+  SC = 125100,
+  SP = 126100,
+  SE = 127100,
+  TO = 128100
+)
+lista_ufs <- names(codigos_uf_orgao)
 lista_orgaos <- sort(unique(df_completo$Nome_Orgao))
 meses_pt <- c("Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez")
 
@@ -72,7 +103,7 @@ ui <- dashboardPage(
         tags$h6(icon("filter"), " FILTROS GLOBAIS", style = "color: #c2c7d0; font-weight: bold; margin-bottom: 15px; letter-spacing: 1px;"),
         
         selectInput("filtro_ano", "Ano de Referência:", choices = c("Todos", as.character(lista_anos)), selected = "Todos"),
-        selectInput("filtro_uf", "UF da Infração:", choices = c("Todas", lista_ufs), selected = "Todas"),
+        selectInput("filtro_uf", "UF do Órgão Autuador:", choices = c("Todas", lista_ufs), selected = "Todas"),
         selectizeInput("filtro_orgao", "Órgão Autuador:", choices = c("Todos", lista_orgaos), selected = "Todos")
     )
   ),
@@ -187,8 +218,15 @@ server <- function(input, output, session) {
     if (input$filtro_ano != "Todos") {
       df <- df %>% filter(Ano == as.numeric(input$filtro_ano))
     }
+    #if (input$filtro_uf != "Todas") {
+    #  df <- df %>% filter(UF == input$filtro_uf)
+    #}
     if (input$filtro_uf != "Todas") {
-      df <- df %>% filter(UF == input$filtro_uf)
+      codigo_orgao <- codigos_uf_orgao[[input$filtro_uf]]
+      if (!is.null(codigo_orgao)) {
+        df <- df %>%
+          filter(`Órgão Autuador` == codigo_orgao)
+      }
     }
     if (input$filtro_orgao != "Todos") {
       df <- df %>% filter(Nome_Orgao == input$filtro_orgao)
